@@ -1,7 +1,6 @@
 var fs = require('fs')
 var path = require('path')
 
-var combineLoaders = require('webpack-combine-loaders')
 var resolve = require('resolve')
 var webpack = require('webpack')
 
@@ -48,22 +47,22 @@ module.exports = function config(options) {
   return {
     devtool: 'cheap-module-eval-source-map',
     entry: [
-      // Polyfill EventSource for IE, as webpack-hot-middleware/client uses it
-      require.resolve('eventsource-polyfill'),
-      require.resolve('webpack-hot-middleware/client'),
-      options.entry
+      require.resolve('react-hot-loader/patch'),
+      'webpack-dev-server/client?http://localhost:3000',
+      'webpack/hot/only-dev-server',
+      options.entry,
     ],
     output: {
       path: __dirname + '/build',
       filename: 'bundle.js',
-      publicPath: '/'
+      publicPath: '/',
     },
     plugins: [
       new webpack.HotModuleReplacementPlugin(),
       new webpack.NoErrorsPlugin(),
       new webpack.DefinePlugin({
         'process.env.NODE_ENV': JSON.stringify('development')
-      })
+      }),
     ],
     resolve: {
       alias: {
@@ -72,12 +71,16 @@ module.exports = function config(options) {
         'react-heatpack-react-dom-alias': reactDOMPath,
         'react-heatpack-script-alias': options.script
       },
-      extensions: ['', '.js', '.jsx', '.json'],
+      extensions: ['', '.js', '.jsx', '.ts', '.tsx', '.json'],
       root: process.cwd(),
-      fallback: [findNodeModules(__dirname)]
+      fallback: [findNodeModules(__dirname)],
     },
     module: {
       loaders: [
+        {
+          test: '',
+          loader: path.join(__dirname, '/backup-file-loader.js?hash=sha512&digest=hex&name=[hash].[ext]'),
+        },
         {
           test: /\.jsx?$/,
           loader: require.resolve('babel-loader'),
@@ -86,58 +89,32 @@ module.exports = function config(options) {
             presets: [
               require.resolve('babel-preset-es2015'),
               require.resolve('babel-preset-react'),
-              require.resolve('babel-preset-stage-0')
+              require.resolve('babel-preset-stage-0'),
             ],
             plugins: [
-              require.resolve('babel-plugin-transform-runtime'),
-              require.resolve('babel-plugin-transform-react-display-name'),
-              [require.resolve('babel-plugin-react-transform'), {
-                transforms: [{
-                  transform: require.resolve('react-transform-hmr'),
-                  imports: [reactPath],
-                  locals: ['module']
-                }, {
-                  transform: require.resolve('react-transform-catch-errors'),
-                  imports: [reactPath, require.resolve('redbox-noreact')]
-                }]
-              }]
-            ]
+              require.resolve('react-hot-loader/babel'),
+            ],
           }
         },
         {
           test: /\.json$/,
-          loader: require.resolve('json-loader')
+          loader: require.resolve('json-loader'),
         },
         {
           test: /\.css$/,
-          loader: combineLoaders([
-            {loader: require.resolve('style-loader')},
-            {loader: require.resolve('css-loader'), query: {minimize: false}}
-          ]) + '!' + require.resolve('autoprefixer-loader')
+          loaders: [
+            require.resolve('style-loader'),
+            require.resolve('css-loader'),
+          ],
         },
         {
-          test: /\.(gif|png)$/,
+          test: /\.(otf|svg|ttf|woff|woff2|gif|png)(\?v=\d+\.\d+\.\d+)?$/,
           loader: require.resolve('url-loader'),
           query: {
-            limit: 10240
-          }
+            limit: 10240,
+          },
         },
-        {
-          test: /\.jpe?g$/,
-          loader: require.resolve('file-loader')
-        },
-        {
-          test: /\.(otf|svg|ttf|woff|woff2)(\?v=\d+\.\d+\.\d+)?$/,
-          loader: require.resolve('url-loader'),
-          query: {
-            limit: 10240
-          }
-        },
-        {
-          test: /\.eot(\?v=\d+\.\d+\.\d+)?$/,
-          loader: require.resolve('file-loader')
-        }
-      ]
-    }
+      ],
+    },
   }
 }

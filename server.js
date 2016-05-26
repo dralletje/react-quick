@@ -1,32 +1,21 @@
-var path = require('path')
-var express = require('express')
-var webpack = require('webpack')
+'use strict';
+
+let webpack = require('webpack');
+let WebpackDevServer = require('webpack-dev-server');
+let path = require('path')
+
 
 module.exports = function server(config, options) {
-  var app = express()
-  var compiler = webpack(config)
-
-  app.use(require('webpack-dev-middleware')(compiler, {
-    noInfo: options.noInfo,
+  new WebpackDevServer(webpack(config), {
+    contentBase: path.join(__dirname, 'build'),
     publicPath: config.output.publicPath,
-    stats: {
-      colors: true
-    }
-  }))
-
-  app.use(require('webpack-hot-middleware')(compiler))
-
-  app.use(express.static(path.join(__dirname, 'build')))
-
-  app.get('*', function(req, res) {
-    res.sendFile(path.join(__dirname, 'build/index.html'))
-  })
-
-  app.listen(options.port, 'localhost', function(err) {
+    hot: options.hot,
+    historyApiFallback: true,
+  }).listen(3000, 'localhost', function (err, result) {
     if (err) {
-      console.error(err.stack)
-      process.exit(1)
+      return console.log(err);
     }
-    console.log('react-heatpack listening at http://localhost:' + options.port)
-  })
+
+    console.log('Listening at http://localhost:3000/');
+  });
 }
