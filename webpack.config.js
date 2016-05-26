@@ -5,7 +5,7 @@ var resolve = require('resolve')
 var webpack = require('webpack')
 
 var NODE_MODULES_RE = /node_modules/
-var ENTRY_RE = /react-heatpack[\\/]entry.js$/
+var ENTRY_RE = /react-quick[\\/]entry.js$/
 
 /**
  * Find the node_modules directory which will be resolved from a given dir.
